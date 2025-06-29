@@ -58,7 +58,8 @@ router.get('/admin/requests', authenticateToken, requireAdmin, (req, res) => {
             u.full_name as user_name,
             u.phone as user_phone,
             b.name as bicycle_name,
-            b.model as bicycle_model
+            b.model as bicycle_model,
+            b.delivery_charge
         FROM rental_requests rr
         LEFT JOIN users u ON rr.user_id = u.id
         LEFT JOIN bicycles b ON rr.bicycle_id = b.id
@@ -115,7 +116,7 @@ router.get('/admin/requests', authenticateToken, requireAdmin, (req, res) => {
 
 // 2. Update rental request status (Admin)
 router.patch('/admin/requests/:id/status', authenticateToken, requireAdmin, [
-    body('status').isIn(['approved', 'waiting_payment', 'arranging_delivery', 'active_rental', 'completed', 'expired']).withMessage('Invalid status')
+    body('status').isIn(['waiting_payment', 'arranging_delivery', 'active_rental', 'completed', 'expired']).withMessage('Invalid status')
 ], (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -167,9 +168,37 @@ router.get('/admin/bicycles', authenticateToken, requireAdmin, (req, res) => {
             });
         }
         
-        res.json({
-            success: true,
-            data: bicycles
+        // Get photos for each bicycle
+        const bicyclesWithPhotos = [];
+        let completed = 0;
+        
+        if (bicycles.length === 0) {
+            return res.json({
+                success: true,
+                data: []
+            });
+        }
+        
+        bicycles.forEach((bicycle, index) => {
+            db.all('SELECT * FROM bicycle_photos WHERE bicycle_id = ? ORDER BY display_order', [bicycle.id], (err, photos) => {
+                if (err) {
+                    console.error('Error fetching photos for bicycle:', bicycle.id, err);
+                }
+                
+                bicyclesWithPhotos[index] = {
+                    ...bicycle,
+                    photos: photos ? photos.map(p => p.photo_url) : []
+                };
+                
+                completed++;
+                
+                if (completed === bicycles.length) {
+                    res.json({
+                        success: true,
+                        data: bicyclesWithPhotos
+                    });
+                }
+            });
         });
     });
 });

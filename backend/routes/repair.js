@@ -297,14 +297,14 @@ router.get('/admin/mechanic-charge', authenticateToken, requireAdmin, (req, res)
         
         res.json({
             success: true,
-            data: charge
+            data: { charge: charge?.amount || 0 }
         });
     });
 });
 
 // 8. Update service mechanic charge (Admin)
 router.put('/admin/mechanic-charge', authenticateToken, requireAdmin, [
-    body('amount').isFloat({ min: 0 }).withMessage('Valid amount is required')
+    body('charge').isFloat({ min: 0 }).withMessage('Valid charge is required')
 ], (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -315,7 +315,7 @@ router.put('/admin/mechanic-charge', authenticateToken, requireAdmin, [
         });
     }
     
-    const { amount } = req.body;
+    const { charge } = req.body;
     
     // Deactivate current active charge
     db.run('UPDATE service_mechanic_charge SET is_active = 0', (err) => {
@@ -328,7 +328,7 @@ router.put('/admin/mechanic-charge', authenticateToken, requireAdmin, [
         }
         
         // Create new charge
-        db.run('INSERT INTO service_mechanic_charge (amount) VALUES (?)', [amount], function(err) {
+        db.run('INSERT INTO service_mechanic_charge (amount, is_active) VALUES (?, 1)', [charge], function(err) {
             if (err) {
                 console.error('Error creating new charge:', err);
                 return res.status(500).json({
@@ -340,8 +340,90 @@ router.put('/admin/mechanic-charge', authenticateToken, requireAdmin, [
             res.json({
                 success: true,
                 message: 'Mechanic charge updated successfully',
-                data: { id: this.lastID, amount }
+                data: { id: this.lastID, charge }
             });
+        });
+    });
+});
+
+// 9. Get time slots (Admin)
+router.get('/admin/time-slots', authenticateToken, requireAdmin, (req, res) => {
+    db.all('SELECT * FROM time_slots ORDER BY start_time', (err, slots) => {
+        if (err) {
+            console.error('Error fetching time slots:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to fetch time slots'
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: slots
+        });
+    });
+});
+
+// 10. Create time slot (Admin)
+router.post('/admin/time-slots', authenticateToken, requireAdmin, [
+    body('start_time').notEmpty().withMessage('Start time is required'),
+    body('end_time').notEmpty().withMessage('End time is required')
+], (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            message: 'Validation error',
+            errors: errors.array()
+        });
+    }
+    
+    const { start_time, end_time } = req.body;
+    
+    db.run(
+        'INSERT INTO time_slots (start_time, end_time, is_active) VALUES (?, ?, 1)',
+        [start_time, end_time],
+        function(err) {
+            if (err) {
+                console.error('Error creating time slot:', err);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Failed to create time slot'
+                });
+            }
+            
+            res.status(201).json({
+                success: true,
+                message: 'Time slot created successfully',
+                data: { id: this.lastID }
+            });
+        }
+    );
+});
+
+// 11. Delete time slot (Admin)
+router.delete('/admin/time-slots/:id', authenticateToken, requireAdmin, (req, res) => {
+    const { id } = req.params;
+    
+    db.run('DELETE FROM time_slots WHERE id = ?', [id], function(err) {
+        if (err) {
+            console.error('Error deleting time slot:', err);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to delete time slot'
+            });
+        }
+        
+        if (this.changes === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Time slot not found'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'Time slot deleted successfully'
         });
     });
 });

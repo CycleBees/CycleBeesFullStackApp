@@ -9,7 +9,7 @@
     "admin": "cd admin-dashboard && npm start",
     "mobile": "cd mobile-app && npm start",
     "install-all": "npm install && cd backend && npm install && cd ../admin-dashboard && npm install && cd ../mobile-app && npm install",
-    "setup": "npm run install-all && npm run setup-db"
+    "setup": "npm run install-all && cd backend && npm run setup-db"
   },
   "keywords": ["bicycle", "repair", "rental", "react-native", "react", "express"],
   "author": "Cycle-Bees Team",

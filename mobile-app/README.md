@@ -1,101 +1,50 @@
-# Cycle-Bees Mobile App
+# Welcome to your Expo app 👋
 
-React Native mobile application for Cycle-Bees bicycle repair and rental service users.
+This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
-## Features
+## Get started
 
-- **Authentication**: Phone OTP login/signup
-- **User Profile**: Manage personal information
-- **Book Repairs**: Multi-service repair booking with file uploads
-- **Book Rentals**: Bicycle rental with delivery options
-- **Coupon System**: Apply discount coupons
-- **Request Tracking**: Monitor repair and rental request status
-- **Promotional Cards**: View promotional content
+1. Install dependencies
 
-## Tech Stack
-
-- **React Native** with Expo
-- **TypeScript** for type safety
-- **React Navigation** for navigation
-- **React Native Paper** for UI components
-- **Axios** for API communication
-- **AsyncStorage** for local data persistence
-- **React Native Image Picker** for file uploads
-
-## Setup Instructions
-
-1. **Install Dependencies**:
    ```bash
    npm install
    ```
 
-2. **Environment Configuration**:
-   Create `.env` file in the root directory:
-   ```
-   EXPO_PUBLIC_API_URL=http://localhost:3000/api
-   ```
+2. Start the app
 
-3. **Start Development Server**:
    ```bash
-   npm start
+   npx expo start
    ```
 
-4. **Run on Device/Simulator**:
-   ```bash
-   # For Android
-   npm run android
-   
-   # For iOS
-   npm run ios
-   
-   # For Web
-   npm run web
-   ```
+In the output, you'll find options to open the app in a
 
-## Project Structure
+- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-```
-src/
-├── components/     # Reusable UI components
-├── screens/        # Screen components
-├── navigation/     # Navigation configuration
-├── services/       # API service functions
-├── hooks/          # Custom React hooks
-├── utils/          # Utility functions
-├── types/          # TypeScript type definitions
-├── config/         # Configuration files
-└── styles/         # Global styles and themes
+You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+
+## Get a fresh project
+
+When you're ready, run:
+
+```bash
+npm run reset-project
 ```
 
-## API Integration
+This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
 
-The mobile app connects to the Cycle-Bees backend API running on `http://localhost:3000`. All API endpoints are configured in `src/config/api.ts`.
+## Learn more
 
-## Development Status
+To learn more about developing your project with Expo, look at the following resources:
 
-- ✅ Project setup and dependencies installed
-- ✅ TypeScript configuration
-- ✅ API configuration
-- ⏳ Screen development (in progress)
-- ⏳ Navigation setup (pending)
-- ⏳ Integration with backend (pending)
+- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
+- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 
-## Next Steps
+## Join the community
 
-1. Set up navigation structure
-2. Implement authentication screens
-3. Create home screen with promotional cards
-4. Build repair booking flow
-5. Develop rental booking interface
-6. Add user profile management
-7. Implement request tracking
-8. Add coupon application feature
+Join our community of developers creating universal apps.
 
-## Expo Configuration
-
-The app is configured with Expo for easy development and deployment. Key configurations are in `app.json`:
-
-- **Platforms**: iOS, Android, Web
-- **Permissions**: Camera, Media Library, Location
-- **Splash Screen**: Custom Cycle-Bees branding
-- **Icons**: App icons for all platforms 
+- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.

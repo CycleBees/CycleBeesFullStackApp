@@ -11,6 +11,22 @@ const sqlite3 = require('sqlite3').verbose();
 const dbPath = process.env.DB_PATH || './database/cyclebees.db';
 const db = new sqlite3.Database(dbPath);
 
+// Helper function to transform snake_case to camelCase
+const transformToCamelCase = (obj) => {
+    if (Array.isArray(obj)) {
+        return obj.map(transformToCamelCase);
+    }
+    if (obj && typeof obj === 'object') {
+        const transformed = {};
+        Object.keys(obj).forEach(key => {
+            const camelKey = key.replace(/_([a-z])/g, (match, letter) => letter.toUpperCase());
+            transformed[camelKey] = transformToCamelCase(obj[key]);
+        });
+        return transformed;
+    }
+    return obj;
+};
+
 // Configure multer for promotional card image uploads
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -91,7 +107,7 @@ router.get('/admin', authenticateToken, requireAdmin, (req, res) => {
             res.json({
                 success: true,
                 data: {
-                    cards,
+                    cards: transformToCamelCase(cards),
                     pagination: {
                         page: parseInt(page),
                         limit: parseInt(limit),
@@ -126,7 +142,7 @@ router.get('/admin/:id', authenticateToken, requireAdmin, (req, res) => {
         
         res.json({
             success: true,
-            data: card
+            data: transformToCamelCase(card)
         });
     });
 });
@@ -137,12 +153,32 @@ router.post('/admin', authenticateToken, requireAdmin, upload.single('image'), [
     body('description').optional(),
     body('externalLink').optional().isURL().withMessage('Invalid external link'),
     body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a positive integer'),
-    body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
-    body('startsAt').optional().isISO8601().withMessage('Invalid start date'),
-    body('endsAt').optional().isISO8601().withMessage('Invalid end date')
+    body('isActive').optional().custom((value) => {
+        if (value === 'true' || value === true) return true;
+        if (value === 'false' || value === false) return false;
+        throw new Error('isActive must be a boolean');
+    }).withMessage('isActive must be a boolean'),
+    body('startsAt').optional().custom((value) => {
+        if (!value || value === '') return true; // Allow empty
+        if (new Date(value).toString() === 'Invalid Date') {
+            throw new Error('Invalid start date format');
+        }
+        return true;
+    }).withMessage('Invalid start date'),
+    body('endsAt').optional().custom((value) => {
+        if (!value || value === '') return true; // Allow empty
+        if (new Date(value).toString() === 'Invalid Date') {
+            throw new Error('Invalid end date format');
+        }
+        return true;
+    }).withMessage('Invalid end date')
 ], (req, res) => {
+    console.log('Received promotional card data:', req.body);
+    console.log('Files:', req.file);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.error('Validation errors:', errors.array());
         return res.status(400).json({
             success: false,
             message: 'Validation error',
@@ -160,6 +196,9 @@ router.post('/admin', authenticateToken, requireAdmin, upload.single('image'), [
         endsAt
     } = req.body;
     
+    // Convert string boolean to actual boolean
+    const isActiveBool = isActive === 'true' || isActive === true;
+    
     const imageUrl = req.file ? `/uploads/promotional/${req.file.filename}` : null;
     
     db.run(
@@ -169,7 +208,7 @@ router.post('/admin', authenticateToken, requireAdmin, upload.single('image'), [
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             title, description, imageUrl, externalLink, displayOrder,
-            isActive ? 1 : 0, startsAt, endsAt
+            isActiveBool ? 1 : 0, startsAt, endsAt
         ],
         function(err) {
             if (err) {
@@ -199,12 +238,29 @@ router.put('/admin/:id', authenticateToken, requireAdmin, upload.single('image')
     body('description').optional(),
     body('externalLink').optional().isURL().withMessage('Invalid external link'),
     body('displayOrder').optional().isInt({ min: 0 }).withMessage('Display order must be a positive integer'),
-    body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
-    body('startsAt').optional().isISO8601().withMessage('Invalid start date'),
-    body('endsAt').optional().isISO8601().withMessage('Invalid end date')
+    body('isActive').optional().custom((value) => {
+        if (value === 'true' || value === true) return true;
+        if (value === 'false' || value === false) return false;
+        throw new Error('isActive must be a boolean');
+    }).withMessage('isActive must be a boolean'),
+    body('startsAt').optional().custom((value) => {
+        if (!value || value === '') return true; // Allow empty
+        if (new Date(value).toString() === 'Invalid Date') {
+            throw new Error('Invalid start date format');
+        }
+        return true;
+    }).withMessage('Invalid start date'),
+    body('endsAt').optional().custom((value) => {
+        if (!value || value === '') return true; // Allow empty
+        if (new Date(value).toString() === 'Invalid Date') {
+            throw new Error('Invalid end date format');
+        }
+        return true;
+    }).withMessage('Invalid end date')
 ], (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.error('Validation errors:', errors.array());
         return res.status(400).json({
             success: false,
             message: 'Validation error',
@@ -245,7 +301,8 @@ router.put('/admin/:id', authenticateToken, requireAdmin, upload.single('image')
     }
     if (isActive !== undefined) {
         fields.push('is_active = ?');
-        values.push(isActive ? 1 : 0);
+        const isActiveBool = isActive === 'true' || isActive === true;
+        values.push(isActiveBool ? 1 : 0);
     }
     if (startsAt !== undefined) {
         fields.push('starts_at = ?');
@@ -375,7 +432,7 @@ router.get('/cards', (req, res) => {
         
         res.json({
             success: true,
-            data: cards
+            data: transformToCamelCase(cards)
         });
     });
 });
